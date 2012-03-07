@@ -18,7 +18,13 @@ include_directories(
         ${LIBDW_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME} main.c)
+add_executable(${PROJECT_NAME}
+    main.cpp
+    DwarfFile.cpp
+    DwarfCu.cpp
+    DwarfDie.cpp
+    DwarfTag.cpp
+    DwarfAttrib.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         ${LIBXML2_LIBRARIES}
