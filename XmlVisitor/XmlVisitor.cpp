@@ -72,11 +72,20 @@ void XmlVisitor::BeginVisitChildType(DwarfDie & die)
 		m_currentVarName = NULL;
 	}
 
-	const char * name = GetTypeName(die);
-	elmt->SetAttribute("Type", name);
-
 	if(die.GetTag().GetTag() != DW_TAG_array_type)
 	{
+		const char * name = NULL;
+		if(die.GetTag().GetTag() != DW_TAG_base_type)
+		{
+			name = GetTypeName(die);
+			elmt->SetAttribute("Type", name);
+		}
+		else
+		{
+			name = die.GetAttrName();
+			elmt->SetAttribute("Type", name);
+		}
+
 		DwarfAttrib * sz = die.GetAttribute(DW_AT_byte_size);
 		if(sz != NULL)
 		{
@@ -95,7 +104,7 @@ void XmlVisitor::BeginVisitChildType(DwarfDie & die)
 		/* For arrays */
 
 		/* Get the count ... */
-		elmt->SetAttribute("Count", (unsigned int)dynamic_cast<Dies::ArrayType*>(&die)->GetCount() );
+		elmt->SetAttribute("Count", (unsigned int)dynamic_cast<Dies::ArrayType*>(&die)->GetCount() + 1 );
 
 		/* Continue digging */
 		DwarfDie * type = die.GetAttrType();

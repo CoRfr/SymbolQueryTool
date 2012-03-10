@@ -45,17 +45,21 @@ public:
 
 	string Name;
 protected:
-	Query(string name) : Name(name)
-	{}
+	Query(string name) :
+			Name(name)
+	{
+	}
 };
 
-class Cu : public Query
+class Cu: public Query
 {
 public:
 	static const char * Option;
 
 	Cu() :
-		Query("Cu") {}
+			Query("Cu")
+	{
+	}
 
 	int ParseOptions(int argc, char * argv[])
 	{
@@ -68,23 +72,24 @@ public:
 	}
 };
 
-const char * Cu::Option  = "cus";
+const char * Cu::Option = "cus";
 
-class Symbol : public Query
+class Symbol: public Query
 {
 public:
 	static const char * Option;
 
 	Symbol() :
-		Query("Symbol"), Verbose(false)
-	{}
+			Query("Symbol"), Verbose(false)
+	{
+	}
 
 	string ExportedSymbol;
 	bool Verbose;
 
 	int ParseOptions(int argc, char * argv[])
 	{
-		if( (argc == 0) || (argv[0][0] == '-') )
+		if ((argc == 0) || (argv[0][0] == '-'))
 		{
 			cerr << "Query Symbol takes at least one argument" << endl;
 			throw exception();
@@ -93,14 +98,14 @@ public:
 		ExportedSymbol = argv[0];
 		cout << "Symbol: Export Symbol is " << ExportedSymbol << endl;
 
-		if(argc <= 1)
+		if (argc <= 1)
 			return 1;
 
 		string verb(argv[1]);
 		cout << "Symbol: Verbose is " << verb << endl;
-		if(verb == "0")
+		if (verb == "0")
 			Verbose = false;
-		else if(verb == "1")
+		else if (verb == "1")
 			Verbose = true;
 		else
 			return 1;
@@ -112,21 +117,24 @@ public:
 	{
 		DwarfDie * root = obj.FindDie(ExportedSymbol.c_str());
 		exporter.ExportDie(root, Verbose);
-		if(root != NULL)
+		if (root != NULL)
 		{
 			delete root;
 		}
 	}
 };
 
-const char * Symbol::Option  = "sym";
+const char * Symbol::Option = "sym";
 
 }
 
 class Options
 {
 public:
-	Options() : HasOutput(false) {}
+	Options() :
+			HasOutput(false)
+	{
+	}
 
 	void Parse(int argc, char * argv[]);
 
@@ -147,25 +155,25 @@ void Options::Parse(int argc, char * argv[])
 	bool error = true;
 
 	/* Source file */
-	if(argc < 2)
+	if (argc < 2)
 		return;
 	SourceFile = argv[currentArgc];
 	currentArgc++;
 
 	cout << "Found Source " << SourceFile << endl;
 
-	while(lastArgc != currentArgc)
+	while (lastArgc != currentArgc)
 	{
 		lastArgc = currentArgc;
 
-		if(argc <= currentArgc)
+		if (argc <= currentArgc)
 			break;
 
-		if(string(argv[currentArgc]) == "-o")
+		if (string(argv[currentArgc]) == "-o")
 		{
 			currentArgc++;
 
-			if(argc <= currentArgc)
+			if (argc <= currentArgc)
 				break;
 
 			HasOutput = true;
@@ -177,10 +185,10 @@ void Options::Parse(int argc, char * argv[])
 
 			cout << "Found Output " << Output << endl;
 		}
-		else if(string(argv[currentArgc]) == "-q")
+		else if (string(argv[currentArgc]) == "-q")
 		{
 			currentArgc++;
-			if(argc <= currentArgc)
+			if (argc <= currentArgc)
 			{
 				error = true;
 				break;
@@ -189,20 +197,24 @@ void Options::Parse(int argc, char * argv[])
 			string queryStr(argv[currentArgc]);
 
 			Queries::Query * query = NULL;
-			if(queryStr == Queries::Cu::Option)
+			if (queryStr == Queries::Cu::Option)
 			{
 				query = new Queries::Cu();
 				cout << "Found Query CU" << endl;
 
 			}
-			else if(queryStr == Queries::Symbol::Option)
+			else if (queryStr == Queries::Symbol::Option)
 			{
 				query = new Queries::Symbol();
 				cout << "Found Query Symbol" << endl;
 			}
+			else
+			{
+				cout << "Unable to find query for " << queryStr << endl;
+			}
 
 			currentArgc++;
-			if(query != NULL)
+			if (query != NULL)
 			{
 				currentArgc += query->ParseOptions(argc - currentArgc, &argv[currentArgc]);
 				Queries.push_back(query);
@@ -211,7 +223,7 @@ void Options::Parse(int argc, char * argv[])
 
 	}
 
-	if(error)
+	if (error)
 	{
 		cerr << "Unable to parse options" << endl;
 		throw exception();
@@ -227,21 +239,24 @@ ostream & operator<<(ostream & os, DwarfDie * die)
 {
 	os << "Die " << die->GetTag().ToString();
 	const char * name = die->GetAttrName();
-	if(name != NULL)
+	if (name != NULL)
 		os << " [" << name << "]";
 
 	return os;
 }
 
-int main(int argc, char * argv[]) {
+int main(int argc, char * argv[])
+{
 
 	/* Usage */
-	if (argc <= 1) {
+	if (argc <= 1)
+	{
 		printUsage(argv[0]);
 		return -1;
 	}
 
-	try {
+	try
+	{
 		/* Handle options */
 		Options opts;
 		opts.Parse(argc, argv);
@@ -252,13 +267,13 @@ int main(int argc, char * argv[]) {
 		Exporters::XmlExporter exporter;
 
 		list<Queries::Query *>::iterator it;
-		for(it = opts.Queries.begin(); it != opts.Queries.end(); it++)
+		for (it = opts.Queries.begin(); it != opts.Queries.end(); it++)
 		{
 			(*it)->DoWork(file, exporter);
 		}
 
 		/* Export */
-		if(opts.HasOutput)
+		if (opts.HasOutput)
 		{
 			exporter.Save(opts.Output);
 		}
@@ -267,11 +282,11 @@ int main(int argc, char * argv[]) {
 			exporter.Print();
 		}
 
-	}
-	catch(exception & ex)
+	} catch (exception & ex)
 	{
 		cerr << "Exception" << endl;
 	}
 
 	return 0;
 }
+

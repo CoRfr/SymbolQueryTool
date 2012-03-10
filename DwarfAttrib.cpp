@@ -34,6 +34,7 @@ const char * DwarfAttrib::GetAttrName(Dwarf_Word attr)
 	case DW_AT_ranges: return "Ranges";
 	case DW_AT_stmt_list: return "Statements";
 	case DW_AT_comp_dir: return "CompDir";
+	case DW_AT_macro_info: return "MacroInfo";
 
 	default:
 		cout << "Unknown attr: " << hex << attr << endl;
