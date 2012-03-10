@@ -22,26 +22,30 @@ extern "C" {
 	#include <dwarf.h>
 	#include <elfutils/libdw.h>
 
-	/* XML */
-	#include <libxml/encoding.h>
-	#include <libxml/xmlwriter.h>
-
 	#include "DwarfHelper.h"
 }
 
 /* Internal */
 
-class DwarfFile;
+class DieVisitor;
+
+class DwarfObj;
 class DwarfDie;
 class DwarfCu;
+class DwarfFile;
 class DwarfTag;
 class DwarfAttrib;
+
+#include "DieVisitor.h"
 
 #include "DwarfTag.h"
 #include "DwarfAttrib.h"
 #include "DwarfFile.h"
+#include "DwarfObj.h"
 #include "DwarfDie.h"
 #include "DwarfCu.h"
+
+#include "Dies/Dies.h"
 
 std::ostream & operator<<(std::ostream & os, DwarfCu * cu);
 std::ostream & operator<<(std::ostream & os, DwarfDie * die);

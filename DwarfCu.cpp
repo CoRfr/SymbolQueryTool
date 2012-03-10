@@ -27,8 +27,17 @@ DwarfCu * DwarfCu::GetCu(Dwarf * dbg, Dwarf_Off offset)
 DwarfCu::DwarfCu(Dwarf * dbg, Dwarf_Off offset, Dwarf_Off nextOffset, size_t hSize,
 		Dwarf_Off abbrev, uint8_t addressSize, uint8_t offsetSize) :
 		m_dbg(dbg), m_offset(offset), m_nextOffset(nextOffset), m_hSize(hSize), m_abbrev(abbrev),
-		m_addressSize(addressSize), m_offsetSize(offsetSize)
+		m_addressSize(addressSize), m_offsetSize(offsetSize), m_die(NULL)
 {
+}
+
+DwarfCu::~DwarfCu()
+{
+	if(m_die != NULL)
+	{
+		delete m_die;
+		m_die = NULL;
+	}
 }
 
 DwarfCu * DwarfCu::Next() const
@@ -38,13 +47,16 @@ DwarfCu * DwarfCu::Next() const
 
 DwarfDie * DwarfCu::GetDie()
 {
-	Dwarf_Die die;
-	if(dwarf_offdie(m_dbg, m_offset + m_hSize, &die) != NULL)
+	if(m_die == NULL)
 	{
-		return new DwarfDie(m_dbg, die);
+		Dwarf_Die die;
+		if(dwarf_offdie(m_dbg, m_offset + m_hSize, &die) != NULL)
+		{
+			m_die = DwarfDie::Build(m_dbg, die);
+		}
 	}
 
-	return NULL;
+	return m_die;
 }
 
 ostream & DwarfCu::operator<<(ostream & os)
@@ -55,5 +67,10 @@ ostream & DwarfCu::operator<<(ostream & os)
 			"," << m_addressSize <<
 			"," << m_offsetSize << "]";
 	return os;
+}
+
+DwarfFile * DwarfCu::GetFile(int idx)
+{
+	return dynamic_cast<Dies::CompileUnit *>(GetDie())->GetFile(idx);
 }
 

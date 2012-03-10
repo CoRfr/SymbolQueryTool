@@ -1,7 +1,7 @@
 /*
  * DwarfFile.h
  *
- *  Created on: 7 mars 2012
+ *  Created on: 10 mars 2012
  *      Author: cor
  */
 
@@ -11,20 +11,11 @@
 class DwarfFile
 {
 public:
-	DwarfFile(const char * file);
-	virtual ~DwarfFile();
+	DwarfFile(Dwarf * dbg, Dwarf_Files * file);
 
-	bool IsValid() const { return (m_dbg != NULL); }
-	Dwarf * GetDbg() const { return m_dbg; }
-
-	DwarfCu * FirstCu();
-	DwarfCu * NextCu(const DwarfCu * cu);
-
-	DwarfDie * FindDie(const char * name);
-
-private:
+protected:
 	Dwarf * m_dbg;
-	int m_fd;
+	Dwarf_Files * m_file;
 };
 
 #endif /* DWARFFILE_H_ */

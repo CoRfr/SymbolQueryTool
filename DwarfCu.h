@@ -22,10 +22,13 @@ public:
 			Dwarf_Off abbrev,
 			uint8_t addressSize,
 			uint8_t offsetSize);
+	virtual ~DwarfCu();
 
 	DwarfCu * Next() const;
 
 	DwarfDie * GetDie();
+
+	DwarfFile * GetFile(int idx);
 
 private:
 	Dwarf * m_dbg;
@@ -35,6 +38,8 @@ private:
 	Dwarf_Off m_abbrev;
 	uint8_t m_addressSize;
 	uint8_t m_offsetSize;
+
+	DwarfDie * m_die;
 };
 
 #endif /* DWARFCU_H_ */

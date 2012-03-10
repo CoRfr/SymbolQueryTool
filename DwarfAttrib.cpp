@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const char * DwarfAttrib::GetName(Dwarf_Word attr)
+const char * DwarfAttrib::GetAttrName(Dwarf_Word attr)
 {
 	switch(attr)
 	{
@@ -20,16 +20,35 @@ const char * DwarfAttrib::GetName(Dwarf_Word attr)
 	case DW_AT_data_member_location: return "DataMemberLocation";
 	case DW_AT_byte_size: return "ByteSize";
 	case DW_AT_sibling: return "Sibling";
+	case DW_AT_external: return "External";
+	case DW_AT_declaration: return "Declaration";
+	case DW_AT_encoding: return "Encoding";
+	case DW_AT_upper_bound: return "UpperBound";
+	case DW_AT_const_value: return "ConstValue";
+	case DW_AT_producer: return "Producer";
+	case DW_AT_location: return "Location";
+	case DW_AT_language: return "Language";
+	case DW_AT_low_pc: return "LowPC";
+	case DW_AT_high_pc: return "HighPC";
+	case DW_AT_entry_pc: return "EntryPC";
+	case DW_AT_ranges: return "Ranges";
+	case DW_AT_stmt_list: return "Statements";
+	case DW_AT_comp_dir: return "CompDir";
+
 	default:
 		cout << "Unknown attr: " << hex << attr << endl;
-		return NULL;
+		return "UNKNOWN";
 	}
 }
 
 DwarfAttrib::DwarfAttrib(Dwarf * dbg, const Dwarf_Attribute & attr)
 	: m_dbg(dbg), m_attr(attr)
 {
+}
 
+const char * DwarfAttrib::GetName()
+{
+	return GetAttrName( this->GetAttr() );
 }
 
 unsigned int DwarfAttrib::GetAttr()
@@ -44,8 +63,7 @@ unsigned int DwarfAttrib::GetForm()
 
 bool DwarfAttrib::AsString(const char ** str)
 {
-	unsigned int form = GetForm();
-	switch(form)
+	switch(GetForm())
 	{
 	case DW_FORM_string:
 	case DW_FORM_strp:
@@ -65,8 +83,7 @@ bool DwarfAttrib::AsString(const char ** str)
 
 bool DwarfAttrib::AsDie(DwarfDie ** die)
 {
-	unsigned int form = GetForm();
-	switch(form)
+	switch(GetForm())
 	{
 	case DW_FORM_ref1:
 	case DW_FORM_ref2:
@@ -80,7 +97,7 @@ bool DwarfAttrib::AsDie(DwarfDie ** die)
 			*die = NULL;
 			return false;
 		}
-		*die = new DwarfDie(m_dbg, tmp);
+		*die = DwarfDie::Build(m_dbg, tmp);
 		return true;
 	}
 	}
@@ -88,12 +105,74 @@ bool DwarfAttrib::AsDie(DwarfDie ** die)
 	return false;
 }
 
+bool DwarfAttrib::AsUdata(unsigned long * var)
+{
+	switch(GetForm())
+	{
+	case DW_FORM_data1:
+	case DW_FORM_data2:
+	case DW_FORM_data4:
+	case DW_FORM_data8:
+	case DW_FORM_udata:
+	{
+		Dwarf_Word uword;
+		if(dwarf_formudata(&m_attr, &uword) != 0)
+		{
+			return false;
+		}
+		*var = (unsigned long)uword;
+		return true;
+	}
+	}
+
+	return false;
+}
+
+bool DwarfAttrib::AsSdata(signed long * var)
+{
+	switch(GetForm())
+	{
+	case DW_FORM_sdata:
+	{
+		Dwarf_Sword sword;
+		if(dwarf_formsdata(&m_attr, &sword) != 0)
+		{
+			return false;
+		}
+		*var = (unsigned long)sword;
+		return true;
+	}
+	}
+
+	return false;
+}
+
+bool DwarfAttrib::AsAddr(unsigned long * var)
+{
+	switch(GetForm())
+	{
+	case DW_FORM_addr:
+	case DW_FORM_block:
+	case DW_FORM_block1:
+	case DW_FORM_block2:
+	case DW_FORM_block4:
+	{
+		Dwarf_Addr addr;
+		if(dwarf_formaddr(&m_attr, &addr) != 0)
+			return false;
+		*var = (unsigned long)addr;
+		return true;
+	}
+	}
+
+	return false;
+}
 std::string DwarfAttrib::ToString()
 {
 	ostringstream stream;
 
 	/* Name */
-	const char * name = GetName( this->GetAttr() );
+	const char * name = GetName();
 	if(name != NULL)
 		stream << name;
 
@@ -122,8 +201,10 @@ std::string DwarfAttrib::ToString()
 			cout << "Unable to retrieve ref" << endl;
 			break;
 		}
-		DwarfDie * dwarfDie = new DwarfDie(m_dbg, die);
-		stream << ": " << dwarfDie->GetName();
+		DwarfDie * dwarfDie = DwarfDie::Build(m_dbg, die);
+		const char * str = dwarfDie->GetAttrName();
+		if(str != NULL)
+			stream << ": " << str;
 		break;
 	}
 	case DW_FORM_data1:
@@ -143,9 +224,19 @@ std::string DwarfAttrib::ToString()
 	case DW_FORM_block2:
 	case DW_FORM_block4:
 		break;
+	case DW_FORM_flag:
+	{
+		bool flag;
+		dwarf_formflag(&m_attr, &flag);
+		if(flag)
+			stream << ": " << "YES";
+		else
+			stream << ": " << "NO";
+		break;
+	}
 	default:
 		cout << "Unknown form: " << hex << form << endl;
-		break;
+		stream << "UNKNOWN";
 	}
 
 	return stream.str();

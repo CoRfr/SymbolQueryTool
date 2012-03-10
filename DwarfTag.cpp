@@ -25,7 +25,7 @@ const char * DwarfTag::GetName(unsigned int tag)
 	case DW_TAG_structure_type: return "Structure";
 	case DW_TAG_volatile_type: return "VolatileType";
 	default:
-		cerr << "Unknown tag: " << hex << tag << endl;
+		cout << "DwarfTag: Unknown tag " << hex << tag << endl;
 		return NULL;
 	}
 }
