@@ -54,13 +54,14 @@ void XmlDieVisitor::BeginVisit(DwarfDie & die)
 
 			{
 				/* Buf */
-				char buf[20];
+				const int bufSize = 40;
+				char buf[bufSize+1] = {0};
 
 				/* Vars */
 				const char * tmpStr;
 				DwarfDie * tmpDie;
-				unsigned long tmpUdata;
-				signed long tmpSdata;
+				uint64_t tmpUdata;
+				int64_t tmpSdata;
 
 				/* String */
 				if(it->AsString(&tmpStr))
@@ -89,7 +90,7 @@ void XmlDieVisitor::BeginVisit(DwarfDie & die)
 				else if(it->AsUdata(&tmpUdata))
 				{
 					attrib->SetAttribute("Type", "Udata");
-					sprintf(buf, "%lu", tmpUdata);
+					snprintf(buf, bufSize, "%" PRIu64, tmpUdata);
 					attrib->SetAttribute("Value", buf);
 				}
 
@@ -97,7 +98,7 @@ void XmlDieVisitor::BeginVisit(DwarfDie & die)
 				else if(it->AsSdata(&tmpSdata))
 				{
 					attrib->SetAttribute("Type", "Sdata");
-					sprintf(buf, "%ls", tmpUdata);
+					snprintf(buf, bufSize, "%" PRIi64, tmpSdata);
 					attrib->SetAttribute("Value", buf);
 				}
 
@@ -105,7 +106,7 @@ void XmlDieVisitor::BeginVisit(DwarfDie & die)
 				else if(it->AsAddr(&tmpUdata))
 				{
 					attrib->SetAttribute("Type", "Addr");
-					sprintf(buf, "0x%x", tmpUdata);
+					snprintf(buf, bufSize, "0x%" PRIX64, tmpUdata);
 					attrib->SetAttribute("Value", buf);
 				}
 			}

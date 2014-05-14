@@ -74,6 +74,29 @@ public:
 
 const char * Cu::Option = "cus";
 
+class Enum: public Query
+{
+public:
+	static const char * Option;
+
+	Enum() :
+			Query("Enum")
+	{
+	}
+
+	int ParseOptions(int argc, char * argv[])
+	{
+		return 0;
+	}
+
+	void DoWork(DwarfObj & obj, Exporters::XmlExporter & exporter)
+	{
+		exporter.ExportEnums(&obj);
+	}
+};
+
+const char * Enum::Option = "enums";
+
 class Symbol: public Query
 {
 public:
@@ -208,6 +231,11 @@ void Options::Parse(int argc, char * argv[])
 				query = new Queries::Symbol();
 				cout << "Found Query Symbol" << endl;
 			}
+			else if (queryStr == Queries::Enum::Option)
+			{
+				query = new Queries::Enum();
+				cout << "Found Query Enum" << endl;
+			}
 			else
 			{
 				cout << "Unable to find query for " << queryStr << endl;
@@ -263,6 +291,7 @@ int main(int argc, char * argv[])
 
 		/* Process */
 		DwarfObj file(opts.SourceFile);
+        file.PrintFiles();
 
 		Exporters::XmlExporter exporter;
 

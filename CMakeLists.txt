@@ -12,6 +12,8 @@ set(CMAKE_MODULE_PATH
 
 find_package(LibDw REQUIRED)
  
+add_definitions(-O0 -g)
+
 include_directories(
         ${LIBDW_INCLUDE_DIRS}
 )

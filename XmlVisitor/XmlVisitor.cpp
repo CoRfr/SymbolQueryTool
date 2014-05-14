@@ -34,7 +34,8 @@ void XmlVisitor::BeginVisit(Dies::Typedef & tdef)
 	m_typedefs.push(tdef);
 
 	DwarfDie * type = tdef.GetAttrType();
-	type->Explore(this);
+	if(type)
+		type->Explore(this);
 }
 
 void XmlVisitor::EndVisit(Dies::Typedef & tdef)
@@ -54,7 +55,7 @@ const char * XmlVisitor::GetTypeName(DwarfDie & die)
 
 	if(name == NULL) {
 		cerr << "Unable to find structure name" << endl;
-		throw exception();
+		return NULL;
 	}
 
 	return name;
@@ -78,7 +79,8 @@ void XmlVisitor::BeginVisitChildType(DwarfDie & die)
 		if(die.GetTag().GetTag() != DW_TAG_base_type)
 		{
 			name = GetTypeName(die);
-			elmt->SetAttribute("Type", name);
+			if(name)
+				elmt->SetAttribute("Type", name);
 		}
 		else
 		{
@@ -108,7 +110,8 @@ void XmlVisitor::BeginVisitChildType(DwarfDie & die)
 
 		/* Continue digging */
 		DwarfDie * type = die.GetAttrType();
-		type->Explore(this);
+		if(type)
+			type->Explore(this);
 	}
 }
 
@@ -122,7 +125,8 @@ void XmlVisitor::BeginVisit(Dies::Member & member)
 	m_currentVarName = member.GetAttrName();
 
 	DwarfDie * type = member.GetAttrType();
-	type->Explore(this);
+	if(type)
+		type->Explore(this);
 }
 
 void XmlVisitor::EndVisit(Dies::Member & str)
@@ -135,7 +139,8 @@ void XmlVisitor::BeginVisit(Dies::Variable & var)
 	m_currentVarName = var.GetAttrName();
 
 	DwarfDie * type = var.GetAttrType();
-	type->Explore(this);
+	if(type)
+		type->Explore(this);
 }
 
 void XmlVisitor::EndVisit(Dies::Variable & var)
@@ -146,7 +151,8 @@ void XmlVisitor::EndVisit(Dies::Variable & var)
 void XmlVisitor::BeginVisit(Dies::VolatileType & var)
 {
 	DwarfDie * type = var.GetAttrType();
-	type->Explore(this);
+	if(type)
+		type->Explore(this);
 }
 
 void XmlVisitor::EndVisit(Dies::VolatileType & var)

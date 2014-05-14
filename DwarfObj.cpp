@@ -56,7 +56,7 @@ DwarfDie * DwarfObj::FindDie(const char * name)
 		DwarfDie * die = cu->GetDie();
 		if(die != NULL)
 		{
-			//cout << die << endl;
+			cout << die << endl;
 
 			/* Is this the die we're looking for ? */
 			const char * childName = die->GetAttrName();

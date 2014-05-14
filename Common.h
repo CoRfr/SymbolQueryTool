@@ -18,6 +18,9 @@ extern "C" {
 	#include <unistd.h>
 	#include <string.h>
 
+	#define __STDC_FORMAT_MACROS
+	#include <inttypes.h>
+
 	/* Dwarf */
 	#include <dwarf.h>
 	#include <elfutils/libdw.h>

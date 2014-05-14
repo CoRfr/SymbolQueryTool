@@ -213,8 +213,13 @@ DwarfDie * DwarfDie::GetAttrType()
 {
 	if(!this->HasAttribute(DW_AT_type))
 	{
-		std::cerr << "Variable has no type" << std::endl;
-		throw std::exception();
+		const char * name = GetAttrName();
+		if(!name)
+			name = "";
+
+		std::cerr << "Variable '" << name << "' has no type" << std::endl;
+		return NULL;
+		//throw std::exception();
 	}
 
 	DwarfAttrib * attrib = this->GetAttribute(DW_AT_type);

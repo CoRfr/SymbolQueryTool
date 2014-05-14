@@ -23,11 +23,14 @@ public:
 
 	void ExportDie(DwarfDie * die, bool verbose = false);
 	void ExportCus(DwarfObj * obj);
+	void ExportEnums(DwarfObj * obj);
 
 private:
 	tinyxml2::XMLDocument m_doc;
 
 	tinyxml2::XMLElement * m_root;
+
+	tinyxml2::XMLElement * ExportCu(Dies::CompileUnit * die);
 };
 
 } /* namespace Exporters */

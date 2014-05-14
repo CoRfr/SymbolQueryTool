@@ -76,6 +76,80 @@ void XmlExporter::ExportDie(DwarfDie * die, bool verbose)
 	}
 }
 
+XMLElement * XmlExporter::ExportCu(Dies::CompileUnit * die)
+{
+	XMLElement * elmt = m_doc.NewElement("CompileUnit");
+
+	/* Print every attributes */
+	list<DwarfAttrib> attribs = die->GetAttributes();
+	list<DwarfAttrib>::iterator it;
+
+	if (!attribs.empty())
+	{
+		XMLElement * xmlAttribs = m_doc.NewElement("Attribs");
+		elmt->InsertEndChild(xmlAttribs);
+
+		for (it = attribs.begin(); it != attribs.end(); it++)
+		{
+			XMLElement * attrib = m_doc.NewElement("Attrib");
+			xmlAttribs->InsertEndChild(attrib);
+
+			attrib->SetAttribute("Name", it->GetName());
+
+			{
+				/* Buf */
+				char buf[20];
+
+				/* Vars */
+				const char * tmpStr;
+				DwarfDie * tmpDie;
+				unsigned long tmpUdata;
+				signed long tmpSdata;
+
+				/* String */
+				if (it->AsString(&tmpStr))
+				{
+					attrib->SetAttribute("Type", "String");
+					attrib->SetAttribute("Value", tmpStr);
+				}
+
+				/* Die */
+				else if (it->AsDie(&tmpDie))
+				{
+					attrib->SetAttribute("Type", "Die");
+					delete tmpDie;
+				}
+
+				/* Udata */
+				else if (it->AsUdata(&tmpUdata))
+				{
+					attrib->SetAttribute("Type", "Udata");
+					sprintf(buf, "%lu", tmpUdata);
+					attrib->SetAttribute("Value", buf);
+				}
+
+				/* Sdata */
+				else if (it->AsSdata(&tmpSdata))
+				{
+					attrib->SetAttribute("Type", "Sdata");
+					sprintf(buf, "%ls", tmpUdata);
+					attrib->SetAttribute("Value", buf);
+				}
+
+				/* Addr */
+				else if(it->AsAddr(&tmpUdata))
+				{
+					attrib->SetAttribute("Type", "Addr");
+					sprintf(buf, "0x%x", tmpUdata);
+					attrib->SetAttribute("Value", buf);
+				}
+			}
+		}
+	}
+
+	return elmt;
+}
+
 void XmlExporter::ExportCus(DwarfObj * obj)
 {
 	XMLElement * queryElmt = m_doc.NewElement("Query");
@@ -84,79 +158,42 @@ void XmlExporter::ExportCus(DwarfObj * obj)
 	DwarfCu * cu = obj->FirstCu(), * tmpCu;
 	while (cu != NULL)
 	{
-		Dies::CompileUnit * die = dynamic_cast<Dies::CompileUnit*>(cu->GetDie());
+		DwarfDie * die = cu->GetDie();
 
-		if (die != NULL)
+		Dies::CompileUnit * dieCompileUnit = dynamic_cast<Dies::CompileUnit *>(die);
+		if (dieCompileUnit != NULL)
 		{
-			XMLElement * elmt = m_doc.NewElement("CompileUnit");
+			XMLElement * elmt = ExportCu(dieCompileUnit);
 			queryElmt->InsertEndChild(elmt);
+		}
 
-			/* Print every attributes */
-			list<DwarfAttrib> attribs = die->GetAttributes();
-			list<DwarfAttrib>::iterator it;
+		/* Next */
+		tmpCu = cu;
+		cu = cu->Next();
+		delete tmpCu;
+	}
+}
 
-			if (!attribs.empty())
-			{
-				XMLElement * xmlAttribs = m_doc.NewElement("Attribs");
-				elmt->InsertEndChild(xmlAttribs);
+void XmlExporter::ExportEnums(DwarfObj * obj)
+{
+	XMLElement * queryElmt = m_doc.NewElement("Enums");
+	m_root->InsertEndChild(queryElmt);
 
-				for (it = attribs.begin(); it != attribs.end(); it++)
-				{
-					XMLElement * attrib = m_doc.NewElement("Attrib");
-					xmlAttribs->InsertEndChild(attrib);
+	DwarfCu * cu = obj->FirstCu(), * tmpCu;
+	while (cu != NULL)
+	{
+		DwarfDie * die = cu->GetDie();
 
-					attrib->SetAttribute("Name", it->GetName());
+		/* Export enums */
+		XmlVisitor enumVisitor(queryElmt);
+		enumVisitor.SetOption(XmlVisitor::OPTION_EXPLORE_ENUMS, true);
+		die->Explore(&enumVisitor);
 
-					{
-						/* Buf */
-						char buf[20];
-
-						/* Vars */
-						const char * tmpStr;
-						DwarfDie * tmpDie;
-						unsigned long tmpUdata;
-						signed long tmpSdata;
-
-						/* String */
-						if (it->AsString(&tmpStr))
-						{
-							attrib->SetAttribute("Type", "String");
-							attrib->SetAttribute("Value", tmpStr);
-						}
-
-						/* Die */
-						else if (it->AsDie(&tmpDie))
-						{
-							attrib->SetAttribute("Type", "Die");
-							delete tmpDie;
-						}
-
-						/* Udata */
-						else if (it->AsUdata(&tmpUdata))
-						{
-							attrib->SetAttribute("Type", "Udata");
-							sprintf(buf, "%lu", tmpUdata);
-							attrib->SetAttribute("Value", buf);
-						}
-
-						/* Sdata */
-						else if (it->AsSdata(&tmpSdata))
-						{
-							attrib->SetAttribute("Type", "Sdata");
-							sprintf(buf, "%ls", tmpUdata);
-							attrib->SetAttribute("Value", buf);
-						}
-
-						/* Addr */
-						else if(it->AsAddr(&tmpUdata))
-						{
-							attrib->SetAttribute("Type", "Addr");
-							sprintf(buf, "0x%x", tmpUdata);
-							attrib->SetAttribute("Value", buf);
-						}
-					}
-				}
-			}
+		map<unsigned int, Dies::EnumerationType *> enums = enumVisitor.GetEnums();
+		map<unsigned int, Dies::EnumerationType *>::iterator it;
+		for(it = enums.begin(); it != enums.end(); it++ )
+		{
+			it->second->Explore(&enumVisitor);
 		}
 
 		/* Next */
